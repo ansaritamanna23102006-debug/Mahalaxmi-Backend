@@ -62,6 +62,16 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root API Welcome Route
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Welcome to the Mahalaxmi Mithaiwala E-commerce Backend API. Refer to /api-docs for documentation.',
+    healthCheckUrl: `${req.protocol}://${req.get('host')}/health`,
+    docsUrl: `${req.protocol}://${req.get('host')}/api-docs`
+  });
+});
+
 // API Routes Namespace
 app.use('/api/v1', apiRouter);
 
