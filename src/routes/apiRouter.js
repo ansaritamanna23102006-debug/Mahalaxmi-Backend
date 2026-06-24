@@ -14,6 +14,7 @@ const newsletterRoutes = require('./newsletterRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
 const categoryRoutes = require('./categoryRoutes');
 const collectionRoutes = require('./collectionRoutes');
+const galleryRoutes = require('./galleryRoutes');
 
 const router = express.Router();
 
@@ -31,5 +32,6 @@ router.use('/newsletter', newsletterRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/collections', collectionRoutes);
+router.use('/gallery', galleryRoutes);
 
 module.exports = router;
