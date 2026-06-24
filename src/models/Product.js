@@ -56,6 +56,31 @@ const productSchema = new mongoose.Schema({
     type: [String],
     default: ['250g', '500g', '1kg']
   },
+  variants: [
+    {
+      weight: { type: String, required: true },
+      price: { type: Number, required: true },
+      discountPrice: { type: Number, default: 0 },
+      stock: { type: Number, default: 100 }
+    }
+  ],
+  featured: {
+    type: Boolean,
+    default: false
+  },
+  bestseller: {
+    type: Boolean,
+    default: false
+  },
+  tags: [{
+    type: String
+  }],
+  seoTitle: {
+    type: String
+  },
+  seoDescription: {
+    type: String
+  },
   ratings: {
     type: Number,
     default: 0
@@ -84,13 +109,34 @@ const productSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-generate Slug before save if not present or modified
+// Auto-generate Slug, SKU, short description and base price before validation
 productSchema.pre('validate', function(next) {
   if (this.name && !this.slug) {
     this.slug = this.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '');
+  }
+  if (!this.shortDescription && this.description) {
+    this.shortDescription = this.description.substring(0, 150) + '...';
+  }
+  if (!this.sku) {
+    const catCode = this.category ? this.category.toUpperCase().substring(0, 3).replace(/[^A-Z]/g, 'MM') : 'MM';
+    this.sku = `MM-${catCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+  }
+  if (!this.price) {
+    if (this.variants && this.variants.length > 0) {
+      this.price = this.variants[0].price;
+    } else {
+      this.price = 0;
+    }
+  }
+  // Sync the boolean flags if new fields are set
+  if (this.featured !== undefined) {
+    this.isFeatured = this.featured;
+  }
+  if (this.bestseller !== undefined) {
+    this.isBestSeller = this.bestseller;
   }
   next();
 });
