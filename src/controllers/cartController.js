@@ -2,6 +2,12 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const Coupon = require('../models/Coupon');
 
+const getWeightMultiplier = (weight) => {
+  if (weight === '250g') return 0.5;
+  if (weight === '1kg') return 2;
+  return 1;
+};
+
 // Helper to calculate cart subtotal, shipping, and discount totals
 const calculateCartTotals = async (cart, couponCode = null) => {
   let subtotal = 0;
@@ -11,10 +17,12 @@ const calculateCartTotals = async (cart, couponCode = null) => {
     const product = await Product.findById(item.product);
     if (product) {
       // Use discount price if it exists and is valid
-      const activePrice = (product.discountPrice && product.discountPrice > 0) 
+      let activePrice = (product.discountPrice && product.discountPrice > 0) 
         ? product.discountPrice 
         : product.price;
       
+      activePrice = activePrice * getWeightMultiplier(item.weight);
+
       item.price = activePrice; // update in cart item
       subtotal += activePrice * item.quantity;
     }
@@ -108,14 +116,17 @@ exports.saveCart = async (req, res, next) => {
     for (const item of items) {
       const product = await Product.findById(item.product || item.productId);
       if (product) {
-        const activePrice = (product.discountPrice && product.discountPrice > 0) 
+        let activePrice = (product.discountPrice && product.discountPrice > 0) 
           ? product.discountPrice 
           : product.price;
         
+        const itemWeight = item.weight || '500g';
+        activePrice = activePrice * getWeightMultiplier(itemWeight);
+
         cartItems.push({
           product: product._id,
           quantity: item.quantity,
-          weight: item.weight || '500g',
+          weight: itemWeight,
           price: activePrice
         });
       }
@@ -173,9 +184,11 @@ exports.addToCart = async (req, res, next) => {
       item => item.product.toString() === productId && item.weight === weight
     );
 
-    const activePrice = (product.discountPrice && product.discountPrice > 0) 
+    let activePrice = (product.discountPrice && product.discountPrice > 0) 
       ? product.discountPrice 
       : product.price;
+
+    activePrice = activePrice * getWeightMultiplier(weight);
 
     if (itemIndex > -1) {
       cart.items[itemIndex].quantity += parseInt(quantity, 10);
