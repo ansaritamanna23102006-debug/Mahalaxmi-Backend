@@ -1,4 +1,5 @@
 const Gallery = require('../models/Gallery');
+const GalleryCategory = require('../models/GalleryCategory');
 const { uploadImage } = require('../services/uploadService');
 const { cloudinary } = require('../config/cloudinary');
 
@@ -67,6 +68,55 @@ exports.deleteGalleryImage = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       message: 'Gallery image deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getGalleryCategories = async (req, res, next) => {
+  try {
+    const categories = await GalleryCategory.find().sort({ name: 1 });
+    res.status(200).json({
+      status: 'success',
+      results: categories.length,
+      categories
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.createGalleryCategory = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      const err = new Error('Please enter a category name');
+      err.statusCode = 400;
+      return next(err);
+    }
+    const category = await GalleryCategory.create({ name });
+    res.status(201).json({
+      status: 'success',
+      category
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteGalleryCategory = async (req, res, next) => {
+  try {
+    const category = await GalleryCategory.findById(req.params.id);
+    if (!category) {
+      const err = new Error('Category not found');
+      err.statusCode = 404;
+      return next(err);
+    }
+    await category.deleteOne();
+    res.status(200).json({
+      status: 'success',
+      message: 'Category deleted successfully'
     });
   } catch (error) {
     next(error);
